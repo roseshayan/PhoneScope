@@ -27,11 +27,12 @@ class _SensorsDetailScreenState extends State<SensorsDetailScreen> {
     setState(() => _isLoading = true);
     try {
       final s = await _service.getSensorsList();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _sensors = s;
           _isLoading = false;
         });
+      }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }

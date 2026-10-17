@@ -26,11 +26,12 @@ class _CameraDetailScreenState extends State<CameraDetailScreen> {
     setState(() => _isLoading = true);
     try {
       final c = await _service.getCameraInfo();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _cameraInfo = c;
           _isLoading = false;
         });
+      }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }

@@ -26,11 +26,12 @@ class _DisplayDetailScreenState extends State<DisplayDetailScreen> {
     setState(() => _isLoading = true);
     try {
       final d = await _service.getDisplayInfo();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _display = d;
           _isLoading = false;
         });
+      }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }

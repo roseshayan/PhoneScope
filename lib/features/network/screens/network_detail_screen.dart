@@ -26,11 +26,12 @@ class _NetworkDetailScreenState extends State<NetworkDetailScreen> {
     setState(() => _isLoading = true);
     try {
       final n = await _service.getNetworkInfo();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _network = n;
           _isLoading = false;
         });
+      }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }

@@ -27,11 +27,12 @@ class _SystemDetailScreenState extends State<SystemDetailScreen> {
     setState(() => _isLoading = true);
     try {
       final s = await _service.getSystemInfo();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _system = s;
           _isLoading = false;
         });
+      }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }

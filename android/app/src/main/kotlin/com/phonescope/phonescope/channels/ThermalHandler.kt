@@ -13,7 +13,7 @@ import io.flutter.plugin.common.MethodChannel
 
 class ThermalHandler(private val context: Context) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
 
-    private var thermalListener: PowerManager.OnThermalStatusChangedListener? = null
+    private var thermalHelper: Any? = null
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
@@ -31,46 +31,34 @@ class ThermalHandler(private val context: Context) : MethodChannel.MethodCallHan
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
-            if (pm != null) {
-                thermalListener = PowerManager.OnThermalStatusChangedListener { status ->
-                    events?.success(mapOf(
-                        "thermalStatus" to thermalStatusToString(status),
-                        "thermalStatusCode" to status
-                    ))
-                }
-                pm.addThermalStatusListener(context.mainExecutor, thermalListener!!)
-            }
+            val helper = ThermalApi29Helper(context)
+            thermalHelper = helper
+            helper.startListening(events)
         }
     }
 
     override fun onCancel(arguments: Any?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && thermalListener != null) {
-            val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
-            try {
-                pm?.removeThermalStatusListener(thermalListener!!)
-            } catch (_: Exception) {}
-            thermalListener = null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            (thermalHelper as? ThermalApi29Helper)?.stopListening()
+            thermalHelper = null
         }
     }
 
     private fun getThermalDetails(): Map<String, Any?> {
-        val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        val statusInt: Int
+        val thermalHeadroom: Float?
 
-        val statusInt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && pm != null) {
-            pm.currentThermalStatus
-        } else {
-            -1
-        }
-
-        val thermalHeadroom = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && pm != null) {
-            try {
-                pm.getThermalHeadroom(10)
-            } catch (_: Exception) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val helper = (thermalHelper as? ThermalApi29Helper) ?: ThermalApi29Helper(context)
+            statusInt = helper.getCurrentThermalStatus()
+            thermalHeadroom = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                helper.getThermalHeadroom()
+            } else {
                 null
             }
         } else {
-            null
+            statusInt = -1
+            thermalHeadroom = null
         }
 
         // Battery temperature
@@ -90,14 +78,64 @@ class ThermalHandler(private val context: Context) : MethodChannel.MethodCallHan
 
     private fun thermalStatusToString(status: Int): String {
         return when (status) {
-            PowerManager.THERMAL_STATUS_NONE -> "Normal / None"
-            PowerManager.THERMAL_STATUS_LIGHT -> "Light Throttling"
-            PowerManager.THERMAL_STATUS_MODERATE -> "Moderate Throttling"
-            PowerManager.THERMAL_STATUS_SEVERE -> "Severe Throttling"
-            PowerManager.THERMAL_STATUS_CRITICAL -> "Critical Throttling"
-            PowerManager.THERMAL_STATUS_EMERGENCY -> "Emergency Shutdown Required"
-            PowerManager.THERMAL_STATUS_SHUTDOWN -> "Thermal Shutdown"
+            0 -> "Normal / None"
+            1 -> "Light Throttling"
+            2 -> "Moderate Throttling"
+            3 -> "Severe Throttling"
+            4 -> "Critical Throttling"
+            5 -> "Emergency Shutdown Required"
+            6 -> "Thermal Shutdown"
             else -> "Not Supported or Pre-Android 10"
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private class ThermalApi29Helper(private val context: Context) {
+        private var listener: PowerManager.OnThermalStatusChangedListener? = null
+        private val pm: PowerManager? = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+
+        fun startListening(events: EventChannel.EventSink?) {
+            if (pm != null && listener == null) {
+                listener = PowerManager.OnThermalStatusChangedListener { status ->
+                    val statusText = when (status) {
+                        0 -> "Normal / None"
+                        1 -> "Light Throttling"
+                        2 -> "Moderate Throttling"
+                        3 -> "Severe Throttling"
+                        4 -> "Critical Throttling"
+                        5 -> "Emergency Shutdown Required"
+                        6 -> "Thermal Shutdown"
+                        else -> "Unknown"
+                    }
+                    events?.success(mapOf(
+                        "thermalStatus" to statusText,
+                        "thermalStatusCode" to status
+                    ))
+                }
+                pm.addThermalStatusListener(context.mainExecutor, listener!!)
+            }
+        }
+
+        fun stopListening() {
+            if (pm != null && listener != null) {
+                try {
+                    pm.removeThermalStatusListener(listener!!)
+                } catch (_: Exception) {}
+                listener = null
+            }
+        }
+
+        fun getCurrentThermalStatus(): Int {
+            return pm?.currentThermalStatus ?: -1
+        }
+
+        @RequiresApi(Build.VERSION_CODES.R)
+        fun getThermalHeadroom(): Float? {
+            return try {
+                pm?.getThermalHeadroom(10)
+            } catch (_: Exception) {
+                null
+            }
         }
     }
 }

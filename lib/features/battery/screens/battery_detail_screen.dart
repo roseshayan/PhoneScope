@@ -38,11 +38,12 @@ class _BatteryDetailScreenState extends State<BatteryDetailScreen> {
   void _loadInitial() async {
     try {
       final b = await _service.getBatteryInfo();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _battery = b;
           _isLoading = false;
         });
+      }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }

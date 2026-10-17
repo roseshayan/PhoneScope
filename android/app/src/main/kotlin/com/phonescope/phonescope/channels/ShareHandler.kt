@@ -3,6 +3,7 @@ package com.phonescope.phonescope.channels
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.core.content.FileProvider
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -83,6 +84,28 @@ class ShareHandler(private val context: Context, private var activity: Activity?
                     result.success(true)
                 } catch (e: Exception) {
                     result.error("SHARE_ERROR", e.localizedMessage, null)
+                }
+            }
+
+            "openUrl" -> {
+                val url = call.argument<String>("url")
+                if (!url.isNullOrEmpty()) {
+                    try {
+                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        val currentActivity = activity
+                        if (currentActivity != null) {
+                            currentActivity.startActivity(browserIntent)
+                        } else {
+                            context.startActivity(browserIntent)
+                        }
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("OPEN_URL_ERROR", e.localizedMessage, null)
+                    }
+                } else {
+                    result.error("INVALID_URL", "URL cannot be empty", null)
                 }
             }
 

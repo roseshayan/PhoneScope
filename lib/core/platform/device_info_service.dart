@@ -255,4 +255,15 @@ class DeviceInfoService {
     });
     return result ?? false;
   }
+
+  Future<bool> openUrl(String url) async {
+    try {
+      final result = await _shareChannel.invokeMethod<bool>('openUrl', {
+        'url': url,
+      });
+      return result ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
 }

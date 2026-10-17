@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app/theme/app_theme.dart';
 import 'features/home/main_screen.dart';
@@ -35,7 +36,15 @@ class _PhoneScopeAppState extends State<PhoneScopeApp> {
       darkTheme: AppTheme.darkTheme,
       themeMode: _themeMode,
       locale: const Locale('fa', 'IR'),
-      supportedLocales: const [Locale('fa', 'IR'), Locale('en', 'US')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('fa', 'IR'),
+        Locale('en', 'US'),
+      ],
       builder: (context, child) {
         return Directionality(
           textDirection: TextDirection.rtl,

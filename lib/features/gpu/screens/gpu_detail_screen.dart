@@ -26,11 +26,12 @@ class _GpuDetailScreenState extends State<GpuDetailScreen> {
     setState(() => _isLoading = true);
     try {
       final g = await _service.getGpuInfo();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _gpu = g;
           _isLoading = false;
         });
+      }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
