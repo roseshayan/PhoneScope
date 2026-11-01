@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.phonescope.phonescope"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -27,6 +27,10 @@ android {
             signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
             isShrinkResources = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
@@ -34,6 +38,7 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.annotation:annotation:1.9.1")
+    implementation("com.google.android.gms:play-services-ads-identifier:18.2.0")
 }
 
 kotlin {

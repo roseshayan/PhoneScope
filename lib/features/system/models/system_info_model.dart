@@ -53,6 +53,13 @@ class SystemInfoModel {
     required this.rootCheckDetails,
   });
 
+  String get deviceDisplayName {
+    if (brand.toLowerCase() == manufacturer.toLowerCase()) {
+      return '$brand $model';
+    }
+    return '$manufacturer $model';
+  }
+
   factory SystemInfoModel.fromMap(Map<dynamic, dynamic> map) {
     return SystemInfoModel(
       manufacturer: map['manufacturer'] as String? ?? 'Unknown',

@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build
+import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -32,12 +33,29 @@ class BatteryHandler(private val context: Context) : MethodChannel.MethodCallHan
         batteryReceiver = object : BroadcastReceiver() {
             override fun onReceive(c: Context?, intent: Intent?) {
                 if (intent != null && events != null) {
-                    events.success(extractFromIntent(intent))
+                    try {
+                        events.success(extractFromIntent(intent))
+                    } catch (_: Exception) {}
                 }
             }
         }
         val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        context.registerReceiver(batteryReceiver, filter)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ContextCompat.registerReceiver(
+                    context,
+                    batteryReceiver,
+                    filter,
+                    ContextCompat.RECEIVER_EXPORTED
+                )
+            } else {
+                context.registerReceiver(batteryReceiver, filter)
+            }
+        } catch (_: Exception) {
+            try {
+                context.registerReceiver(batteryReceiver, filter)
+            } catch (_: Exception) {}
+        }
     }
 
     override fun onCancel(arguments: Any?) {
@@ -51,7 +69,11 @@ class BatteryHandler(private val context: Context) : MethodChannel.MethodCallHan
 
     private fun getBatteryDetails(): Map<String, Any?> {
         val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        val intent = context.registerReceiver(null, filter)
+        val intent = try {
+            context.registerReceiver(null, filter)
+        } catch (_: Exception) {
+            null
+        }
         return if (intent != null) {
             extractFromIntent(intent)
         } else {
@@ -99,10 +121,10 @@ class BatteryHandler(private val context: Context) : MethodChannel.MethodCallHan
         val technology = intent.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY) ?: "Unknown"
 
         val bm = context.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
-        val currentNowUa = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) ?: 0
-        val currentAvgUa = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE) ?: 0
-        val chargeCounterUah = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER) ?: 0
-        val capacityPercent = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
+        val currentNowUa = try { bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) ?: 0 } catch (_: Exception) { 0 }
+        val currentAvgUa = try { bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE) ?: 0 } catch (_: Exception) { 0 }
+        val chargeCounterUah = try { bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER) ?: 0 } catch (_: Exception) { 0 }
+        val capacityPercent = try { bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1 } catch (_: Exception) { -1 }
 
         return mapOf(
             "level" to percentage,

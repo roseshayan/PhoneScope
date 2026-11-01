@@ -33,8 +33,16 @@ class NetworkInfoHandler(private val context: Context) : MethodChannel.MethodCal
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
         val wm = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
 
-        val activeNetwork = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) cm?.activeNetwork else null
-        val caps = if (activeNetwork != null) cm?.getNetworkCapabilities(activeNetwork) else null
+        val activeNetwork = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try { cm?.activeNetwork } catch (_: Exception) { null }
+        } else {
+            null
+        }
+        val caps = if (activeNetwork != null) {
+            try { cm?.getNetworkCapabilities(activeNetwork) } catch (_: Exception) { null }
+        } else {
+            null
+        }
 
         val isConnected = caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         val isWifi = caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ?: false
@@ -58,49 +66,51 @@ class NetworkInfoHandler(private val context: Context) : MethodChannel.MethodCal
         var wifiStandard = "Unknown"
 
         if (isWifi && wm != null) {
-            @Suppress("DEPRECATION")
-            val wifiInfo: WifiInfo? = wm.connectionInfo
-            if (wifiInfo != null) {
-                linkSpeedMbps = wifiInfo.linkSpeed
-                rssiDbm = wifiInfo.rssi
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    frequencyMhz = wifiInfo.frequency
-                }
-
-                // SSID permission check on Android 8+ / 10+
-                val hasLocation = ContextCompat.checkSelfPermission(
-                    context,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-
-                val rawSsid = wifiInfo.ssid
-                wifiSsid = if (rawSsid != null && rawSsid != "<unknown ssid>") {
-                    rawSsid.replace("\"", "")
-                } else if (!hasLocation) {
-                    "Location permission required on Android 10+"
-                } else {
-                    "Unavailable or Hidden"
-                }
-
-                if (hasLocation) {
-                    wifiBssid = wifiInfo.bssid ?: "Unavailable"
-                } else {
-                    wifiBssid = "Permission required"
-                }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    wifiStandard = when (wifiInfo.wifiStandard) {
-                        6 -> "Wi-Fi 6 (802.11ax)"
-                        5 -> "Wi-Fi 5 (802.11ac)"
-                        4 -> "Wi-Fi 4 (802.11n)"
-                        1 -> "Legacy (802.11a/b/g)"
-                        8 -> "Wi-Fi 7 (802.11be)"
-                        else -> if (frequencyMhz > 4900) "5 GHz" else if (frequencyMhz > 0) "2.4 GHz" else "Standard ${wifiInfo.wifiStandard}"
+            try {
+                @Suppress("DEPRECATION")
+                val wifiInfo: WifiInfo? = wm.connectionInfo
+                if (wifiInfo != null) {
+                    linkSpeedMbps = wifiInfo.linkSpeed
+                    rssiDbm = wifiInfo.rssi
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        frequencyMhz = wifiInfo.frequency
                     }
-                } else {
-                    wifiStandard = if (frequencyMhz > 4900) "5 GHz (802.11ac/n)" else if (frequencyMhz > 0) "2.4 GHz (802.11n/g)" else "Unknown"
+
+                    // SSID permission check on Android 8+ / 10+
+                    val hasLocation = ContextCompat.checkSelfPermission(
+                        context,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                    val rawSsid = wifiInfo.ssid
+                    wifiSsid = if (rawSsid != null && rawSsid != "<unknown ssid>") {
+                        rawSsid.replace("\"", "")
+                    } else if (!hasLocation) {
+                        "Location permission required on Android 10+"
+                    } else {
+                        "Unavailable or Hidden"
+                    }
+
+                    if (hasLocation) {
+                        wifiBssid = wifiInfo.bssid ?: "Unavailable"
+                    } else {
+                        wifiBssid = "Permission required"
+                    }
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        wifiStandard = when (wifiInfo.wifiStandard) {
+                            6 -> "Wi-Fi 6 (802.11ax)"
+                            5 -> "Wi-Fi 5 (802.11ac)"
+                            4 -> "Wi-Fi 4 (802.11n)"
+                            1 -> "Legacy (802.11a/b/g)"
+                            8 -> "Wi-Fi 7 (802.11be)"
+                            else -> if (frequencyMhz > 4900) "5 GHz" else if (frequencyMhz > 0) "2.4 GHz" else "Standard ${wifiInfo.wifiStandard}"
+                        }
+                    } else {
+                        wifiStandard = if (frequencyMhz > 4900) "5 GHz (802.11ac/n)" else if (frequencyMhz > 0) "2.4 GHz (802.11n/g)" else "Unknown"
+                    }
                 }
-            }
+            } catch (_: Exception) {}
         }
 
         // Local IP Addresses
@@ -127,10 +137,10 @@ class NetworkInfoHandler(private val context: Context) : MethodChannel.MethodCal
 
     private fun getLocalIpv4Address(): String {
         try {
-            val interfaces = NetworkInterface.getNetworkInterfaces()
+            val interfaces = NetworkInterface.getNetworkInterfaces() ?: return "127.0.0.1"
             for (intf in interfaces) {
                 if (intf.isLoopback || !intf.isUp) continue
-                val addrs = intf.inetAddresses
+                val addrs = intf.inetAddresses ?: continue
                 for (addr in addrs) {
                     if (!addr.isLoopbackAddress && addr is Inet4Address) {
                         return addr.hostAddress ?: "Unknown"
@@ -144,13 +154,15 @@ class NetworkInfoHandler(private val context: Context) : MethodChannel.MethodCal
     private fun getDnsServers(cm: ConnectivityManager?): List<String> {
         val list = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && cm != null) {
-            val activeNetwork = cm.activeNetwork
-            if (activeNetwork != null) {
-                val linkProps = cm.getLinkProperties(activeNetwork)
-                linkProps?.dnsServers?.forEach { dns ->
-                    list.add(dns.hostAddress ?: "")
+            try {
+                val activeNetwork = cm.activeNetwork
+                if (activeNetwork != null) {
+                    val linkProps = cm.getLinkProperties(activeNetwork)
+                    linkProps?.dnsServers?.forEach { dns ->
+                        list.add(dns.hostAddress ?: "")
+                    }
                 }
-            }
+            } catch (_: Exception) {}
         }
         return list.filter { it.isNotBlank() }
     }

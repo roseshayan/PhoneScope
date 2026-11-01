@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../core/platform/device_info_service.dart';
+import 'speaker_cleaner_screen.dart';
+import '../../../core/ads/widgets/adivery_banner_widget.dart';
 
 class AudioMicTestScreen extends StatefulWidget {
   const AudioMicTestScreen({super.key});
@@ -71,197 +73,234 @@ class _AudioMicTestScreenState extends State<AudioMicTestScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('تست صوت و میکروفون')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Speaker Test Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF06B6D4)
-                                .withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.volume_up,
-                            color: Color(0xFF06B6D4),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'تست بلندگو و خروجی صدا',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                            Text(
-                              'تولید فرکانس سینوسی ۴۴۰ هرتز (نت لا)',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'با فشردن دکمه زیر، یک صدای آزمایشی تمیز به مدت ۵ ثانیه پخش می‌شود. به وضوح صدا و عدم وجود نویز یا خش‌خش گوش دهید.',
-                      style: TextStyle(fontSize: 13, height: 1.5),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isPlayingTone
-                              ? const Color(0xFFF43F5E)
-                              : const Color(0xFF06B6D4),
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: _toggleTone,
-                        icon: Icon(
-                          _isPlayingTone ? Icons.stop : Icons.play_arrow,
-                        ),
-                        label: Text(
-                          _isPlayingTone ? 'توقف پخش صدا' : 'شروع پخش صدای تست',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Microphone Test Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF10B981)
-                                .withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.mic,
-                            color: Color(0xFF10B981),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'تست ورودی میکروفون',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                            Text(
-                              'پایش دامنه سیگنال و دسی‌بل زنده',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'برای آزمایش، دکمه تست را بزنید و در نزدیکی میکروفون صحبت کنید یا فوت کنید. سطح نوسان نوار باید تغییر کند.',
-                      style: TextStyle(fontSize: 13, height: 1.5),
-                    ),
-                    const SizedBox(height: 16),
-                    // VU Meter Bar
-                    Container(
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF0B1120)
-                            : const Color(0xFFE2E8F0),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Stack(
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  // Speaker Test Card
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          FractionallySizedBox(
-                            widthFactor: (_currentDb / 100.0).clamp(0.0, 1.0),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF10B981),
-                                    Color(0xFFF59E0B),
-                                    Color(0xFFF43F5E),
-                                  ],
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF06B6D4)
+                                      .withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                borderRadius: BorderRadius.circular(8),
+                                child: const Icon(
+                                  Icons.volume_up,
+                                  color: Color(0xFF06B6D4),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'تست بلندگو و خروجی صدا',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  Text(
+                                    'تولید فرکانس سینوسی ۴۴۰ هرتز (نت لا)',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'با فشردن دکمه زیر، یک صدای آزمایشی تمیز به مدت ۵ ثانیه پخش می‌شود. به وضوح صدا و عدم وجود نویز یا خش‌خش گوش دهید.',
+                            style: TextStyle(fontSize: 13, height: 1.5),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _isPlayingTone
+                                    ? const Color(0xFFF43F5E)
+                                    : const Color(0xFF06B6D4),
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: _toggleTone,
+                              icon: Icon(
+                                _isPlayingTone ? Icons.stop : Icons.play_arrow,
+                              ),
+                              label: Text(
+                                _isPlayingTone ? 'توقف پخش صدا' : 'شروع پخش صدای تست',
                               ),
                             ),
                           ),
-                          Center(
-                            child: Text(
-                              _isTestingMic
-                                  ? '${_currentDb.toStringAsFixed(1)} dB'
-                                  : 'میکروفون غیرفعال است',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                          const SizedBox(height: 12),
+                          // Shortcut to Speaker Cleaner & Water Eject
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF10B981),
+                                side: const BorderSide(color: Color(0xFF10B981)),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const SpeakerCleanerScreen(),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.water_drop, size: 18),
+                              label: const Text(
+                                'تخلیه آب و پاک‌سازی گرد و غبار اسپیکر (جدید)',
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isTestingMic
-                              ? const Color(0xFFF43F5E)
-                              : const Color(0xFF10B981),
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: _isTestingMic ? _stopMicTest : _startMicTest,
-                        icon: Icon(_isTestingMic ? Icons.mic_off : Icons.mic),
-                        label: Text(
-                          _isTestingMic
-                              ? 'توقف تست میکروفون'
-                              : 'آغاز تست زنده میکروفون',
-                        ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Microphone Test Card
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF10B981)
+                                      .withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.mic,
+                                  color: Color(0xFF10B981),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'تست ورودی میکروفون',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  Text(
+                                    'پایش دامنه سیگنال و دسی‌بل زنده',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'برای آزمایش، دکمه تست را بزنید و در نزدیکی میکروفون صحبت کنید یا فوت کنید. سطح نوسان نوار باید تغییر کند.',
+                            style: TextStyle(fontSize: 13, height: 1.5),
+                          ),
+                          const SizedBox(height: 16),
+                          // VU Meter Bar
+                          Container(
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xFF0B1120)
+                                  : const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Stack(
+                              children: [
+                                FractionallySizedBox(
+                                  widthFactor: (_currentDb / 100.0).clamp(0.0, 1.0),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF10B981),
+                                          Color(0xFFF59E0B),
+                                          Color(0xFFF43F5E),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
+                                Center(
+                                  child: Text(
+                                    _isTestingMic
+                                        ? '${_currentDb.toStringAsFixed(1)} dB'
+                                        : 'میکروفون غیرفعال است',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _isTestingMic
+                                    ? const Color(0xFFF43F5E)
+                                    : const Color(0xFF10B981),
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: _isTestingMic ? _stopMicTest : _startMicTest,
+                              icon: Icon(_isTestingMic ? Icons.mic_off : Icons.mic),
+                              label: Text(
+                                _isTestingMic
+                                    ? 'توقف تست میکروفون'
+                                    : 'آغاز تست زنده میکروفون',
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+
+          // Bottom Banner Ad
+          const AdiveryBannerWidget(),
+        ],
       ),
     );
   }

@@ -10,6 +10,7 @@ import '../../../core/platform/device_info_service.dart';
 import '../../../core/utilities/formatters.dart';
 import '../../../core/widgets/metric_card.dart';
 import '../../../core/widgets/status_badge.dart';
+import '../../../core/ads/widgets/adivery_native_card.dart';
 
 class DashboardScreen extends StatefulWidget {
   final Function(int) onNavigateTab;
@@ -41,23 +42,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _loadDashboardData() async {
     setState(() => _isLoading = true);
     try {
-      final s = await _service.getSystemInfo();
-      final c = await _service.getCpuInfo();
-      final m = await _service.getMemoryInfo();
-      final st = await _service.getStorageInfo();
-      final b = await _service.getBatteryInfo();
-      final t = await _service.getThermalInfo();
-      final n = await _service.getNetworkInfo();
+      // اجرای همزمان و موازی کوئری‌های نیتیو جهت افزایش چشم‌گیر سرعت بارگذاری در تمام گوشی‌ها
+      final results = await Future.wait([
+        _service.getSystemInfo().catchError((_) => SystemInfoModel.fromMap({})),
+        _service.getCpuInfo().catchError((_) => CpuInfoModel.fromMap({})),
+        _service.getMemoryInfo().catchError((_) => MemoryInfoModel.fromMap({})),
+        _service.getStorageInfo().catchError((_) => StorageInfoModel.fromMap({})),
+        _service.getBatteryInfo().catchError((_) => BatteryInfoModel.fromMap({})),
+        _service.getThermalInfo().catchError((_) => ThermalInfoModel.fromMap({})),
+        _service.getNetworkInfo().catchError((_) => NetworkInfoModel.fromMap({})),
+      ]);
 
       if (mounted) {
         setState(() {
-          _system = s;
-          _cpu = c;
-          _memory = m;
-          _storage = st;
-          _battery = b;
-          _thermal = t;
-          _network = n;
+          _system = results[0] as SystemInfoModel;
+          _cpu = results[1] as CpuInfoModel;
+          _memory = results[2] as MemoryInfoModel;
+          _storage = results[3] as StorageInfoModel;
+          _battery = results[4] as BatteryInfoModel;
+          _thermal = results[5] as ThermalInfoModel;
+          _network = results[6] as NetworkInfoModel;
           _isLoading = false;
         });
       }
@@ -82,11 +86,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('فون‌اسکوپ • PhoneScope'),
+        title: const Text('مرکز کنترل و مشخصات'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadDashboardData,
+            tooltip: 'تازه‌سازی اطلاعات',
           ),
         ],
       ),
@@ -95,106 +100,140 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           children: [
-            // Hero Device Header Card
+            // Top Hero Device Card
             if (s != null)
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFF06B6D4).withValues(alpha: 0.3),
+              Card(
+                margin: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(
+                    color: Color(0xFF06B6D4),
+                    width: 1.2,
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          s.brand.toUpperCase(),
-                          style: const TextStyle(
-                            color: Color(0xFF06B6D4),
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.5,
-                            fontSize: 12,
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFF06B6D4,
+                                  ).withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.phone_android,
+                                  color: Color(0xFF06B6D4),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    s.deviceDisplayName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 17,
+                                    ),
+                                  ),
+                                  Text(
+                                    s.manufacturer.toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Color(0xFF06B6D4),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                        ),
-                        StatusBadge(
-                          label: 'Android ${s.androidVersion}',
-                          type: BadgeType.success,
-                          icon: Icons.android,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${s.manufacturer} ${s.model}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
+                          StatusBadge(
+                            label: s.isRootedHeuristic
+                                ? 'روت شده (ناامن)'
+                                : 'امن و اصلی',
+                            type: s.isRootedHeuristic
+                                ? BadgeType.error
+                                : BadgeType.success,
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'مدل فنی: ${s.device} • ساخت: ${s.board}',
-                      style: const TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 12,
+                      const SizedBox(height: 16),
+                      const Divider(height: 1),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildDetailChip('اندروید', s.androidVersion),
+                          _buildDetailChip('سطح API', s.apiLevel.toString()),
+                          _buildDetailChip(
+                            'معماری',
+                            s.is64Bit ? '64-Bit' : '32-Bit',
+                          ),
+                          _buildDetailChip(
+                            'وصله امنیتی',
+                            s.securityPatch.split('-').take(2).join('-'),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             const SizedBox(height: 16),
 
-            // Quick Hardware Action Grid
+            // Quick Access Actions
             Row(
               children: [
                 _buildQuickAction(
-                  title: 'تست سخت‌افزار',
+                  title: 'تست‌ها',
                   icon: Icons.fact_check,
                   color: const Color(0xFF06B6D4),
-                  onTap: () => widget.onNavigateTab(3), // Tests tab
+                  onTap: () => widget.onNavigateTab(3),
                 ),
                 const SizedBox(width: 10),
                 _buildQuickAction(
-                  title: 'بنچمارک‌ها',
-                  icon: Icons.speed,
-                  color: const Color(0xFF10B981),
-                  onTap: () => widget.onNavigateTab(4), // Tools tab
+                  title: 'سخت‌افزار',
+                  icon: Icons.devices_other,
+                  color: const Color(0xFF8B5CF6),
+                  onTap: () => widget.onNavigateTab(1),
                 ),
                 const SizedBox(width: 10),
                 _buildQuickAction(
-                  title: 'پایش زنده',
-                  icon: Icons.monitor_heart,
+                  title: 'پایش حرارتی',
+                  icon: Icons.thermostat,
                   color: const Color(0xFFF59E0B),
-                  onTap: () => widget.onNavigateTab(2), // Monitor tab
+                  onTap: () => widget.onNavigateTab(2),
+                ),
+                const SizedBox(width: 10),
+                _buildQuickAction(
+                  title: 'ابزارها',
+                  icon: Icons.construction,
+                  color: const Color(0xFF10B981),
+                  onTap: () => widget.onNavigateTab(4),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-
-            const Text(
-              'وضعیت لحظه‌ای منابع سیستم',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
             // RAM Usage Card
             if (m != null)
               _buildProgressCard(
-                title: 'حافظه موقت (RAM)',
-                valueStr: '${m.usedPercentage.toStringAsFixed(1)}% اشغال',
+                title: 'حافظه رم (RAM)',
+                valueStr: '${m.usedPercentage.toStringAsFixed(1)}% مصرف',
                 progress: (m.usedPercentage / 100.0).clamp(0.0, 1.0),
                 detailStr:
-                    '${Formatters.formatBytes(m.usedMemBytes)} مصرف شده از ${Formatters.formatBytes(m.totalMemBytes)}',
+                    '${Formatters.formatBytes(m.usedMemBytes, useBinary: true)} پر از ${Formatters.formatBytes(m.totalMemBytes, useBinary: true)} (${Formatters.formatBytes(m.availMemBytes, useBinary: true)} آزاد)',
                 color: const Color(0xFF06B6D4),
                 icon: Icons.memory,
               ),
@@ -273,9 +312,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
+            const SizedBox(height: 12),
+
+            // Native Ad Card
+            const AdiveryNativeCard(),
+            const SizedBox(height: 16),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDetailChip(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+        ),
+      ],
     );
   }
 

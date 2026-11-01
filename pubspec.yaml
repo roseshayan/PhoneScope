@@ -39,6 +39,7 @@ dependencies:
   path_provider: ^2.1.6
   pdf: ^3.13.1
   crypto: ^3.0.7
+  adivery: ^4.9.0
 
 dev_dependencies:
   flutter_test:

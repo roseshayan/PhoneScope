@@ -234,6 +234,42 @@ class DeviceInfoService {
     return result ?? 0.0;
   }
 
+  // Speaker Cleaner & Water/Dust Eject
+  Future<bool> startSpeakerCleaner({
+    String mode = 'auto',
+    double frequency = 165.0,
+    int durationSeconds = 30,
+    bool isEarpiece = false,
+    bool enableVibration = true,
+  }) async {
+    try {
+      final result = await _hardwareTestChannel.invokeMethod<bool>(
+        'startSpeakerCleaner',
+        {
+          'mode': mode,
+          'frequency': frequency,
+          'durationSeconds': durationSeconds,
+          'isEarpiece': isEarpiece,
+          'enableVibration': enableVibration,
+        },
+      );
+      return result ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> stopSpeakerCleaner() async {
+    try {
+      final result = await _hardwareTestChannel.invokeMethod<bool>(
+        'stopSpeakerCleaner',
+      );
+      return result ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // Share
   Future<bool> shareFile(
     String filePath, {

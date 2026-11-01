@@ -5,6 +5,9 @@ import 'touch_test_screen.dart';
 import 'audio_mic_test_screen.dart';
 import 'vibration_test_screen.dart';
 import 'flashlight_test_screen.dart';
+import 'speaker_cleaner_screen.dart';
+import '../../../core/ads/adivery_service.dart';
+import '../../../core/ads/widgets/adivery_banner_widget.dart';
 
 class HardwareTestsScreen extends StatefulWidget {
   const HardwareTestsScreen({super.key});
@@ -20,6 +23,12 @@ class _HardwareTestsScreenState extends State<HardwareTestsScreen> {
     setState(() {
       _testResults[testKey] = passed;
     });
+
+    // پس از ثبت نتیجه تست‌ها در صورت امکان تبلیغ میان‌صفحه‌ای نمایش داده می‌شود
+    final completedCount = _testResults.values.where((v) => v != null).length;
+    if (completedCount >= 3) {
+      AdiveryService().showInterstitialAd();
+    }
   }
 
   @override
@@ -32,152 +41,230 @@ class _HardwareTestsScreenState extends State<HardwareTestsScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('آزمایشگاه تست سخت‌افزار')),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+      body: Column(
         children: [
-          // Header Summary Card
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isDark
-                    ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
-                    : [const Color(0xFFF1F5F9), Colors.white],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFF06B6D4).withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 12),
               children: [
+                // Header Summary Card
                 Container(
-                  width: 50,
-                  height: 50,
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF06B6D4).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(
+                      colors: isDark
+                          ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                          : [const Color(0xFFF1F5F9), Colors.white],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF06B6D4).withValues(alpha: 0.3),
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.fact_check,
-                    color: Color(0xFF06B6D4),
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      const Text(
-                        'چک‌لیست سلامت قطعات',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF06B6D4).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.fact_check,
+                          color: Color(0xFF06B6D4),
+                          size: 28,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '$passedCount از $completedCount تست گذرانده شده با موفقیت',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark
-                              ? const Color(0xFF94A3B8)
-                              : const Color(0xFF64748B),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'چک‌لیست سلامت قطعات',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '$passedCount از $completedCount تست گذرانده شده با موفقیت',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(height: 8),
+
+                // Featured Tool: Speaker Cleaner Banner Card
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isDark
+                          ? [const Color(0xFF064E3B), const Color(0xFF022C22)]
+                          : [const Color(0xFFECFDF5), const Color(0xFFD1FAE5)],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SpeakerCleanerScreen(),
+                        ),
+                      );
+                    },
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.water_drop, color: Color(0xFF10B981)),
+                    ),
+                    title: Row(
+                      children: [
+                        const Text(
+                          'پاک‌کننده جرم و خروج آب اسپیکر',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'جدید',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    subtitle: const Text(
+                      'تولید امواج صوتی ۱۶۵ هرتز و ارتعاش جهت تمیزکاری بلندگو',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: Color(0xFF10B981),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // 1. Display Test
+                _buildTestTile(
+                  title: 'تست صفحه‌نمایش (Display & Pixels)',
+                  subtitle: 'بررسی پیکسل‌های سوخته، گرادیان و یکنواختی پنل',
+                  icon: Icons.smartphone,
+                  status: _testResults['display'],
+                  onStart: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const DisplayTestScreen()),
+                    );
+                    _showConfirmResultDialog('display', 'صفحه‌نمایش');
+                  },
+                ),
+
+                // 2. Touch Test
+                _buildTestTile(
+                  title: 'تست تاچ و لمس همزمان (Multi-Touch)',
+                  subtitle: 'بررسی نقاط کور، مسیر لمس و چندانگشتی',
+                  icon: Icons.fingerprint,
+                  status: _testResults['touch'],
+                  onStart: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TouchTestScreen()),
+                    );
+                    _showConfirmResultDialog('touch', 'تاچ و لمس');
+                  },
+                ),
+
+                // 3. Audio & Mic Test
+                _buildTestTile(
+                  title: 'تست بلندگو و میکروفون (Audio & Mic)',
+                  subtitle: 'پخش صدای استاندارد و پایش دامنه سیگنال صدا',
+                  icon: Icons.volume_up,
+                  status: _testResults['audio'],
+                  onStart: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AudioMicTestScreen()),
+                    );
+                    _showConfirmResultDialog('audio', 'بلندگو و میکروفون');
+                  },
+                ),
+
+                // 4. Vibration Test
+                _buildTestTile(
+                  title: 'تست موتور لرزش و Haptics',
+                  subtitle: 'بررسی پالس‌ها و الگوهای لرزشی هپتیک',
+                  icon: Icons.vibration,
+                  status: _testResults['vibration'],
+                  onStart: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const VibrationTestScreen()),
+                    );
+                    _showConfirmResultDialog('vibration', 'موتور لرزش');
+                  },
+                ),
+
+                // 5. Flashlight Test
+                _buildTestTile(
+                  title: 'تست فلاش دوربین (Flashlight)',
+                  subtitle: 'آزمایش سلامت دیود ال‌ای‌دی چراغ‌قوه',
+                  icon: Icons.flashlight_on,
+                  status: _testResults['flashlight'],
+                  onStart: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const FlashlightTestScreen()),
+                    );
+                    _showConfirmResultDialog('flashlight', 'فلش دوربین');
+                  },
+                ),
+
+                // 6. Buttons Manual Guide Test
+                _buildTestTile(
+                  title: 'تست دکمه‌های فیزیکی (Buttons)',
+                  subtitle: 'بررسی کلیدهای کم/زیاد صدا و پاور',
+                  icon: Icons.power_settings_new,
+                  status: _testResults['buttons'],
+                  onStart: () => _showButtonsTestDialog(),
+                ),
               ],
             ),
           ),
-          const SizedBox(height: 8),
 
-          // 1. Display Test
-          _buildTestTile(
-            title: 'تست صفحه‌نمایش (Display & Pixels)',
-            subtitle: 'بررسی پیکسل‌های سوخته، گرادیان و یکنواختی پنل',
-            icon: Icons.smartphone,
-            status: _testResults['display'],
-            onStart: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const DisplayTestScreen()),
-              );
-              _showConfirmResultDialog('display', 'صفحه‌نمایش');
-            },
-          ),
-
-          // 2. Touch Test
-          _buildTestTile(
-            title: 'تست تاچ و لمس همزمان (Multi-Touch)',
-            subtitle: 'بررسی نقاط کور، مسیر لمس و چندانگشتی',
-            icon: Icons.fingerprint,
-            status: _testResults['touch'],
-            onStart: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const TouchTestScreen()),
-              );
-              _showConfirmResultDialog('touch', 'تاچ و لمس');
-            },
-          ),
-
-          // 3. Audio & Mic Test
-          _buildTestTile(
-            title: 'تست بلندگو و میکروفون (Audio & Mic)',
-            subtitle: 'پخش صدای استاندارد و پایش دامنه سیگنال صدا',
-            icon: Icons.volume_up,
-            status: _testResults['audio'],
-            onStart: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AudioMicTestScreen()),
-              );
-              _showConfirmResultDialog('audio', 'بلندگو و میکروفون');
-            },
-          ),
-
-          // 4. Vibration Test
-          _buildTestTile(
-            title: 'تست موتور لرزش و Haptics',
-            subtitle: 'بررسی پالس‌ها و الگوهای لرزشی هپتیک',
-            icon: Icons.vibration,
-            status: _testResults['vibration'],
-            onStart: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const VibrationTestScreen()),
-              );
-              _showConfirmResultDialog('vibration', 'موتور لرزش');
-            },
-          ),
-
-          // 5. Flashlight Test
-          _buildTestTile(
-            title: 'تست فلاش دوربین (Flashlight)',
-            subtitle: 'آزمایش سلامت دیود ال‌ای‌دی چراغ‌قوه',
-            icon: Icons.flashlight_on,
-            status: _testResults['flashlight'],
-            onStart: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const FlashlightTestScreen()),
-              );
-              _showConfirmResultDialog('flashlight', 'فلش دوربین');
-            },
-          ),
-
-          // 6. Buttons Manual Guide Test
-          _buildTestTile(
-            title: 'تست دکمه‌های فیزیکی (Buttons)',
-            subtitle: 'بررسی کلیدهای کم/زیاد صدا و پاور',
-            icon: Icons.power_settings_new,
-            status: _testResults['buttons'],
-            onStart: () => _showButtonsTestDialog(),
-          ),
+          // Bottom Banner Ad
+          const AdiveryBannerWidget(),
         ],
       ),
     );
@@ -201,32 +288,45 @@ class _HardwareTestsScreenState extends State<HardwareTestsScreen> {
     } else if (status == false) {
       statusColor = const Color(0xFFF43F5E);
       statusIcon = Icons.cancel;
-      statusText = 'ناسالم / ناموفق';
+      statusText = 'دارای نقص';
     }
 
-    return Card(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: (status == null ? Colors.grey : statusColor).withValues(alpha: 0.25),
+        ),
+      ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Container(
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: const Color(0xFF06B6D4).withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
+            color: const Color(0xFF06B6D4).withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: const Color(0xFF06B6D4), size: 22),
+          child: Icon(icon, color: const Color(0xFF06B6D4)),
         ),
         title: Text(
           title,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(fontSize: 11, color: Colors.grey),
+        ),
         trailing: OutlinedButton.icon(
           style: OutlinedButton.styleFrom(
             foregroundColor: statusColor,
             side: BorderSide(color: statusColor),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            minimumSize: Size.zero,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
           onPressed: onStart,
           icon: Icon(statusIcon, size: 16),

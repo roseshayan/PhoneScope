@@ -27,8 +27,19 @@ class AppsInfoHandler(private val context: Context) : MethodChannel.MethodCallHa
 
     private fun getAppsList(includeSystem: Boolean): List<Map<String, Any?>> {
         val pm = context.packageManager
-        val flags = PackageManager.GET_PERMISSIONS
-        val packages: List<PackageInfo> = pm.getInstalledPackages(flags)
+
+        // Safe package query: avoid TransactionTooLargeException if device has 300+ apps
+        val packages: List<PackageInfo> = try {
+            pm.getInstalledPackages(PackageManager.GET_PERMISSIONS)
+        } catch (_: Exception) {
+            // Fallback to basic flags if binder transaction exceeds 1MB buffer
+            try {
+                pm.getInstalledPackages(0)
+            } catch (_: Exception) {
+                emptyList()
+            }
+        }
+
         val result = mutableListOf<Map<String, Any?>>()
 
         for (pkg in packages) {

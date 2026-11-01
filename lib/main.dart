@@ -3,9 +3,12 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app/theme/app_theme.dart';
 import 'features/home/main_screen.dart';
+import 'core/ads/adivery_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // مقداردهی اولیه شبکه تبلیغاتی ادیوری (Adivery)
+  await AdiveryService().initialize();
   runApp(const PhoneScopeApp());
 }
 
